@@ -78,8 +78,6 @@ def test_user(db):
         email='test@test.com',
         password='test',
         role='user',
-        marketplace_id='test_marketplace_id',
-        has_active_subscription=True
     )
 
     db.session.add(user)

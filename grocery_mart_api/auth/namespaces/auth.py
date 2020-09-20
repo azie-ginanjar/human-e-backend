@@ -68,13 +68,6 @@ class RegistrationResource(Resource):
             email=email.lower(),
             password=password,
             role='user',
-            business_name=None,
-            marketplace_id=None,
-            auth_profile="lazada_test",
-            customer_id=None,
-            plan=None,
-            has_active_subscription=True,
-            is_trialing=True,
             phone=None
         )
 
@@ -82,11 +75,12 @@ class RegistrationResource(Resource):
 
         try:
             db.session.commit()
-            user_dump = UserSchema().dump(user).data
+            user_dump = UserSchema().dump(user)
+            print(user_dump)
             user_dump.pop("password", None)
             ret = {
                 'error': None,
-                'username': user.username, # @TODO: Double check if this is actually being used. May be deprecated.
+                'username': user.username,
                 'user': user_dump
             }
         except Exception as e:
@@ -173,75 +167,3 @@ class RefreshTokenResource(Resource):
             'access_token': create_access_token(identity=current_user)
         }
         return ret
-
-
-@api.route('/generate_reset_token')
-class ResetTokenResource(Resource):
-    method_decorators = []
-
-    @api.expect(api.model('GenerateResetTokenPostResourceFields', {
-        'email': fields.String(required=True, description='Required if method is email')
-    }))
-    def post(self):
-        """
-        Start of password recovery.
-        System generates reset password token and sends it to the email user specified.
-        """
-
-
-        email = request.json.get('email')
-        if not email:
-            return {'error': 'No email in request.'}
-
-        user = User.find_user_by_email(email)
-        if not user:
-            return {'error': 'No user found for this email.'}
-
-        ResetToken.query.filter_by(user_id=user.id).delete()
-        reset_token = ResetToken(user_id=user.id, token_str=str(uuid.uuid4()))
-        db.session.add(reset_token)
-        try:
-            db.session.commit()
-        except Exception as e:
-            db.session.rollback()
-            traceback.print_exc()
-            return {'error': None, 'msg': 'Failed to save reset token to database.'}
-
-
-        if not current_app.testing:
-            # @TODO actually send the email using SendGrid
-            return {'error': None, 'msg': 'Successfully sent email.'}
-
-
-@api.route('/reset_password')
-class ResetPasswordResource(Resource):
-    method_decorators = []
-
-    @api.expect(reset_password_resource_resource_fields)
-    def post(self):
-        """
-        Second and final step for resetting password. Grabs the token correct token,
-        and finds the corresponding user and updates the password.
-        """
-        reset_password_fields = request.json
-        token_str = reset_password_fields['token_str']
-        password = reset_password_fields['password']
-        password_2 = reset_password_fields['password_2']
-        reset_token = ResetToken.query.filter_by(token_str=token_str).first()
-        if not password == password_2:
-            return {'error': 'Passwords do not match.'}
-
-        if not reset_token:
-            return {'error': 'Reset token not found.'}
-
-        if reset_token.expiration_date < datetime.datetime.utcnow().isoformat():
-            return {'error': 'Reset token has already expired.'}
-
-        user = User.query.filter_by(id=reset_token.user_id).first()
-        user.update_password(password_2)
-        try:
-            db.session.commit()
-            return {'error': None, 'msg': 'Password successfully updated.'}
-        except Exception as e:
-            db.session.rollback()
-            return {'error': 'Failed to save password in database update'}

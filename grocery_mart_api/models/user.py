@@ -14,11 +14,6 @@ class User(db.Model):
     email = db.Column(db.String())
     password = db.Column(db.String())
     role = db.Column(db.String())
-    marketplace_id = db.Column(db.String())
-    customer_id = db.Column(db.String())
-    has_active_subscription = db.Column(db.Boolean())
-    is_trialing = db.Column(db.String())
-    plan = db.Column(db.String())
     phone = db.Column(db.String(), nullable=True)
     created_at = db.Column(db.String())
     epoch_created_at = db.Column(db.Integer())
@@ -34,37 +29,6 @@ class User(db.Model):
     def update_password(self, password):
         self.password = pwd_context.hash(password)
 
-    # def update_credentials(self, seller_id, access_token, marketplace_id, auth_profile):
-    #     self.seller_id = seller_id
-    #     self.access_token = access_token
-    #     self.marketplace_id = marketplace_id
-    #     self.auth_profile = auth_profile
-
-    def cancel_membership(self):
-        self.has_active_subscription = False
-        self.is_trialing = False
-
-    def restart_membership(self):
-        self.has_active_subscription = True
-        self.is_trialing = False
-
-    def mark_as_completed_trial(self):
-        self.has_active_subscription = True
-        self.is_trialing = False
-
-    def get_formatted_user_details(self):
-        return {
-            "username": self.username,
-            "businessName": self.business_name,
-            "marketplaceId": self.marketplace_id,
-            "authProfile": self.auth_profile,
-            "email": self.email,
-            "plan": self.plan,
-            "phone": self.phone,
-            "active": self.has_active_subscription,
-            "isTrialing": self.is_trialing,
-        }
-
     @staticmethod
     def get(user_id):
         return User.query.filter_by(id=user_id).first()
@@ -78,18 +42,6 @@ class User(db.Model):
         return User.query.filter(func.lower(User.email) == func.lower(email)).first()
 
     @staticmethod
-    def find_user_by_customer_id(customer_id):
-        return User.query.filter_by(customer_id=customer_id).first()
-
-    @staticmethod
-    def find_user_by_phone(phone):
-        return User.query.filter_by(phone=phone).first()
-
-    @staticmethod
     def get_users():
         return User.query.all()
-
-    @staticmethod
-    def get_active_users():
-        return User.query.filter_by(has_active_subscription=True)
 
