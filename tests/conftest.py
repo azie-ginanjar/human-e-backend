@@ -40,7 +40,6 @@ def client(app):
 def admin_user(db):
     user = User(
         username='admin',
-        email='admin@admin.com',
         password='admin',
         role='admin'
     )
@@ -52,30 +51,25 @@ def admin_user(db):
 
 
 @pytest.fixture
-def admin_headers(admin_user, client):
+def admin_access_token(admin_user, client):
     data = {
-        'username_or_email': admin_user.username,
+        'username': admin_user.username,
         'password': 'admin'
     }
-    rep = client.post(
+    res = client.post(
         '/auth/login',
         data=json.dumps(data),
         headers={'content-type': 'application/json'}
     )
 
-    # print(rep.get_data(as_text=True))
-    tokens = json.loads(rep.get_data(as_text=True))
-    return {
-        'content-type': 'application/json',
-        'authorization': 'Bearer %s' % tokens['access_token']
-    }
+    json_data = json.loads(res.data)
+    return json_data['access_token']
 
 
 @pytest.fixture
 def test_user(db):
     user = User(
         username='test',
-        email='test@test.com',
         password='test',
         role='user',
     )
@@ -87,79 +81,10 @@ def test_user(db):
 
 
 @pytest.fixture
-def test_user_by_endpoint(client):
-    res = client.post("/auth/registration", json={
-        "username": "test",  # use plan_id to make each username unique
-        "email": "test@test.com",
-        "password": "test"
-    })
-
-    res_json = json.loads(res.data)
-    # print(res_json)
-    return res_json['user']
-
-
-@pytest.fixture
-def another_test_user(db):
-    user = User(
-        user_id="123",
-        username='test1',
-        email='test1@test.com',
-        password='test1',
-        role='user'
-    )
-
-    db.session.add(user)
-    db.session.commit()
-
-    return user
-
-
-@pytest.fixture
 def access_token(client, test_user):
     res = client.post("/auth/login", json={
-        "username_or_email": test_user.username,
+        "username": test_user.username,
         "password": "test"
     })
     json_data = json.loads(res.data)
-    # print(json_data)
     return json_data['access_token']
-
-
-@pytest.fixture
-def access_token_with_test_user_by_endpoint(client, test_user_by_endpoint):
-    res = client.post("/auth/login", json={
-        "username_or_email": test_user_by_endpoint['username'],
-        "password": test_user_by_endpoint['password']
-    })
-    json_data = json.loads(res.data)
-    # print(json_data)
-    return json_data['access_token']
-
-
-@pytest.fixture
-def access_token_with_test_user_by_endpoint(client, test_user_by_endpoint):
-    res = client.post("/auth/login", json={
-        "username_or_email": test_user_by_endpoint['username'],
-        "password": "test"
-    })
-    json_data = json.loads(res.data)
-    # print(json_data)
-    return json_data['access_token']
-
-
-@pytest.fixture
-def access_token_another(client, another_test_user):
-    res = client.post("/auth/login", json={
-        "username_or_email": another_test_user.email,
-        "password": "test1"
-    })
-    json_data = json.loads(res.data)
-    # print(json_data)
-    return json_data['access_token']
-
-
-@pytest.fixture
-def set_env_for_shopee(monkeypatch):
-    monkeypatch.setenv('SHOPEE_PARTNER_ID', '123123')
-    monkeypatch.setenv('SHOPEE_SECRET_KEY', 'fake difficult string')

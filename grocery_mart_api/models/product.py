@@ -1,0 +1,15 @@
+from sqlalchemy import ForeignKey
+
+from grocery_mart_api.extensions import db
+
+
+class Product(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    price = db.Column(db.Float, precision=2)
+    merchant = db.Column(db.String(), length=255)
+    expiry = db.Column(db.Integer(), nullable=True)
+    created_at = db.Column(db.Integer())
+    created_by = db.Column(db.Integer, ForeignKey('user.id', ondelete='SET NULL'))
+
+    def __init__(self, **kwargs):
+        super(Product, self).__init__(**kwargs)
