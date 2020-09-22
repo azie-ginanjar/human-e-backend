@@ -1,3 +1,5 @@
+import time
+
 from sqlalchemy import func, UniqueConstraint
 
 from grocery_mart_api.extensions import db, pwd_context
@@ -9,10 +11,14 @@ class User(db.Model):
     username = db.Column(db.String())
     password = db.Column(db.String())
     role = db.Column(db.String())
-    created_at = db.Column(db.Integer())
 
     __table_args__ = (
         UniqueConstraint('username', name='unique_username'),
+    )
+
+    orders = db.relationship(
+        'Order',
+        backref='user'
     )
 
     def __init__(self, **kwargs):
