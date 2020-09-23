@@ -4,9 +4,9 @@ from flask import request
 from flask_restx import Namespace, Resource, fields
 
 from grocery_mart_api.commons.decorators import admin_required
-from grocery_mart_api.commons.schemas import ProductSchema
+from grocery_mart_api.commons.schemas import ProductSchema, InventorySchema
 from grocery_mart_api.extensions import db
-from grocery_mart_api.models import Product, Inventory
+from grocery_mart_api.models import Product, Inventory, StockIn
 
 api = Namespace('product', description='products related endpoint')
 
@@ -14,6 +14,11 @@ add_product_fields = api.model('AddProductFields', {
     'price': fields.Float(required=True, description='product price'),
     'merchant': fields.String(required=True, description='merchant'),
     'expiry': fields.Integer(required=True, description='product expiry in epoch'),
+})
+
+add_stock_fields = api.model('AddStockFields', {
+    'product_id': fields.String(required=True, description='product id'),
+    'quantity': fields.Integer(required=True, description='quantity'),
 })
 
 update_product_fields = api.model('UpdateProductFields', {
@@ -103,4 +108,46 @@ class ProductResource(Resource):
             db.session.rollback()
             return {
                        'error': 'failed to updated to database'
+                   }, 400
+
+
+@api.route('/stockin')
+class ProductResource(Resource):
+    method_decorators = [admin_required]
+
+    @api.expect(add_stock_fields, validate=True)
+    def post(self):
+        """
+        add stock
+        """
+        quantity = request.json.get('quantity')
+        product_id = request.json.get('product_id')
+
+        stock_in_id = str(uuid.uuid4())
+        stock_in = StockIn(
+            id=stock_in_id,
+            quantity=int(quantity),
+            product_id=product_id
+        )
+
+        db.session.add(stock_in)
+
+        # add quantity on inventory
+        inventory = Inventory.query.filter(
+            Inventory.product_id == product_id
+        ).first()
+
+        inventory.stock += quantity
+
+        try:
+            db.session.commit()
+            inventory_dump = InventorySchema().dump(inventory)
+
+            return {
+                'inventory': inventory_dump
+            }
+        except Exception as e:
+            db.session.rollback()
+            return {
+                       'error': 'failed to saved to database'
                    }, 400
