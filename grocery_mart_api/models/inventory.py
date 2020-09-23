@@ -4,8 +4,8 @@ from grocery_mart_api.extensions import db
 
 
 class Inventory(db.Model):
-    id = db.Column(db.Integer(), primary_key=True)
-    product_id = db.Column(db.Integer(), ForeignKey('product.id', ondelete='CASCADE'))
+    id = db.Column(db.String(), primary_key=True)
+    product_id = db.Column(db.String(), ForeignKey('product.id', ondelete='CASCADE'))
     stock = db.Column(db.Integer())
 
     product = db.relationship(

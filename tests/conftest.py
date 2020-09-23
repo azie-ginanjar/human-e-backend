@@ -1,6 +1,7 @@
 import io
 import json
 import time
+import uuid
 
 import pytest
 
@@ -40,7 +41,9 @@ def client(app):
 
 @pytest.fixture
 def admin_user(db):
+    user_id = str(uuid.uuid4())
     user = User(
+        id=user_id,
         username='admin',
         password='admin',
         role='admin'
@@ -70,7 +73,9 @@ def admin_access_token(admin_user, client):
 
 @pytest.fixture
 def test_user(db):
+    user_id = str(uuid.uuid4())
     user = User(
+        id=user_id,
         username='test',
         password='test',
         role='user',
@@ -95,6 +100,7 @@ def access_token(client, test_user):
 @pytest.fixture
 def product(db):
     product = Product(
+        id=str(uuid.uuid4()),
         merchant='admin',
         price=10.9,
         expiry=int(time.time())

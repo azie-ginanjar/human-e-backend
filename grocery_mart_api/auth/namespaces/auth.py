@@ -1,3 +1,5 @@
+import uuid
+
 from flask import request, current_app
 from flask_jwt_extended import (
     get_jwt_identity,
@@ -45,7 +47,9 @@ class RegistrationResource(Resource):
         username = request.json.get('username')
         password = request.json.get('password')
 
+        user_id = str(uuid.uuid4())
         user = User(
+            id=user_id,
             username=username.lower(),
             password=password,
             role='user'

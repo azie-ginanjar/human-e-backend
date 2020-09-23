@@ -6,7 +6,7 @@ EXPIRATION_MINUTES = 15
 
 
 class ResetToken(db.Model):
-    user_id = db.Column(db.Integer(), ForeignKey('user_v2.id'), primary_key=True)
+    user_id = db.Column(db.String(), ForeignKey('user_v2.id'), primary_key=True)
     token_str = db.Column(db.String())
     expiration_date = db.Column(db.String())
 
