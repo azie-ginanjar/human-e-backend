@@ -8,7 +8,7 @@ import json
 def schema_dump(schema, page_obj):
     # doing this because postgres result returns Decimal() object and
     # schema.dump can't serialize that.
-    dump = schema.dumps(page_obj.items, cls=util.DecimalEncoder).data
+    dump = schema.dumps(page_obj.items, cls=util.DecimalEncoder)
     return json.loads(dump)
 
 

@@ -10,6 +10,7 @@ def setup_initial_coondition(client, admin_access_token):
         "/api/v1/product/",
         json={
             "merchant": "merchant1",
+            'name': 'test_product_1',
             "expiry": int(time.time()),
             "price": 200.01
         },

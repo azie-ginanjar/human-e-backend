@@ -101,6 +101,7 @@ def access_token(client, test_user):
 def product(db):
     product = Product(
         id=str(uuid.uuid4()),
+        name='test_product',
         merchant='admin',
         price=10.9,
         expiry=int(time.time())
