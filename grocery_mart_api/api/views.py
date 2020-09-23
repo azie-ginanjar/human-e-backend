@@ -6,11 +6,13 @@ from grocery_mart_api.commons.exceptions import PermissionDeniedException
 from jwt import exceptions as jwt_exception
 
 from grocery_mart_api.api.namespaces.user import api as user_namespace
+from grocery_mart_api.api.namespaces.product import api as product_namespace
 
 blueprint = Blueprint('api', __name__, url_prefix='/api/v1')
 api = Api(blueprint)
 
 api.add_namespace(user_namespace)
+api.add_namespace(product_namespace)
 
 
 @api.errorhandler(jwt_extended_exception.NoAuthorizationError)

@@ -5,7 +5,7 @@ class Product(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     price = db.Column(db.Float(precision=2))
     merchant = db.Column(db.String(length=255))
-    expiry = db.Column(db.Integer(), nullable=True)
+    expiry = db.Column(db.Integer())
 
     inventory = db.relationship(
         'Inventory',

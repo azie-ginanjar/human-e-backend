@@ -1,8 +1,10 @@
 import io
 import json
+import time
+
 import pytest
 
-from grocery_mart_api.models import User
+from grocery_mart_api.models import User, Product
 from grocery_mart_api.app import create_app
 from grocery_mart_api.extensions import db as _db
 
@@ -88,3 +90,17 @@ def access_token(client, test_user):
     })
     json_data = json.loads(res.data)
     return json_data['access_token']
+
+
+@pytest.fixture
+def product(db):
+    product = Product(
+        merchant='admin',
+        price=10.9,
+        expiry=int(time.time())
+    )
+
+    db.session.add(product)
+    db.session.commit()
+
+    return product
