@@ -139,3 +139,28 @@ def test_checkout(client, access_token, admin_access_token):
     )
     res_json = json.loads(res.data)
     order_id = res_json['order']['id']
+
+    # validate inventory not updated after add to cart
+    inventory = Inventory.query.filter(
+        Inventory.product_id == product_id
+    ).first()
+
+    assert inventory.stock == 10
+    # checkout
+    res = client.post(
+        "/api/v1/order/checkout",
+        json={
+            "order_id": order_id,
+            "delivery_date": int(time.time())
+        },
+        headers={
+            'content-type': 'application/json',
+            'Authorization': 'Bearer ' + access_token
+        },
+    )
+
+    # validate inventory updated after checkout
+    inventory = Inventory.query.filter(
+        Inventory.product_id == product_id
+    ).first()
+    assert inventory.stock == 5

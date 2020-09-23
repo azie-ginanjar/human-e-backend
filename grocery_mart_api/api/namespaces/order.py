@@ -132,7 +132,7 @@ class ProductResource(Resource):
         for detail in order.order_details:
             inventory = Inventory.query.filter(
                 Inventory.product_id == detail.product_id
-            )
+            ).first()
 
             if inventory.stock < detail.quantity:
                 db.session.delete(detail)
@@ -145,12 +145,12 @@ class ProductResource(Resource):
                            'error': 'insufficient stocks'
                        }, 400
             else:
-                inventory.append({
+                inventory_mapping.append({
                     'id': inventory.id,
                     'stock': inventory.stock - detail.quantity
                 })
 
-        db.session.bulk_update_mapping(Inventory, inventory_mapping)
+        db.session.bulk_update_mappings(Inventory, inventory_mapping)
 
         try:
             db.session.commit()
