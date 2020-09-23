@@ -120,3 +120,22 @@ def test_get_active_cart(client, access_token, admin_access_token):
     res_json = json.loads(res.data)
     assert res.status_code == 200
     assert len(res_json['order']['order_details']) == 1
+
+
+def test_checkout(client, access_token, admin_access_token):
+    # add product to cart
+    product_id = setup_initial_coondition(client, admin_access_token)
+
+    res = client.post(
+        "/api/v1/order/cart",
+        json={
+            "product_id": product_id,
+            "quantity": 5
+        },
+        headers={
+            'content-type': 'application/json',
+            'Authorization': 'Bearer ' + access_token
+        },
+    )
+    res_json = json.loads(res.data)
+    order_id = res_json['order']['id']

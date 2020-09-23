@@ -15,6 +15,11 @@ add_to_cart_fields = api.model('AddToCartFields', {
     'quantity': fields.Integer(required=True, description='quantity')
 })
 
+checkout_fields = api.model('CheckoutFields', {
+    'order_id': fields.String(required=True, description='order id'),
+    'delivery_date': fields.Integer(required=True, description='delivery date in epoch')
+})
+
 parser = api.parser()
 parser.add_argument('Authorization', type=str, location='headers')
 
@@ -100,4 +105,62 @@ class ProductResource(Resource):
             db.session.rollback()
             return {
                        'error': 'failed to saved to database'
+                   }, 400
+
+
+@api.route('/checkout')
+class ProductResource(Resource):
+    method_decorators = [jwt_required]
+
+    def post(self):
+        """
+        checkout active cart (unpaid order)
+        """
+        order_id = request.json.get('order_id')
+        delivery_date = request.json.get('delivery_date')
+
+        order = Order.query.filter(
+            Order.user_id == get_jwt_identity(),
+            Order.id == order_id
+        ).first()
+
+        order.status = 'paid'
+        order.delivery_date = delivery_date
+
+        inventory_mapping = []
+
+        for detail in order.order_details:
+            inventory = Inventory.query.filter(
+                Inventory.product_id == detail.product_id
+            )
+
+            if inventory.stock < detail.quantity:
+                db.session.delete(detail)
+
+                try:
+                    db.session.commit()
+                except Exception as e:
+                    db.session.rollback()
+                return {
+                           'error': 'insufficient stocks'
+                       }, 400
+            else:
+                inventory.append({
+                    'id': inventory.id,
+                    'stock': inventory.stock - detail.quantity
+                })
+
+        db.session.bulk_update_mapping(Inventory, inventory_mapping)
+
+        try:
+            db.session.commit()
+            order = OrderSchema().dump(order)
+
+            return {
+                'order': order
+            }
+        except Exception as e:
+            db.session.rollback()
+            return {
+                       'error': 'failed to retrieved data from database'
                    }, 400
